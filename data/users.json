@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "nombre": "Lautaro Centeno",
+    "apellido": "Britos",
+    "email": "lautarocenteno37@gmail.com",
+    "contraseña": "LC_1234",
+    "direccion": "belgrano 31",
+    "telefono": "123456789"
+  },
+  {
+    "id": 2,
+    "nombre": "Patricia",
+    "apellido": "Britos",
+    "email": "patriciabritos12@gmail.com",
+    "contraseña": "PB_1234",
+    "direccion": "intendente fenoglio 123",
+    "telefono": "123456789"
+  },
+  {
+    "id": 3,
+    "nombre": "Nahuel",
+    "apellido": "Fernández",
+    "email": "nahuelfernandez@gmail.com",
+    "contraseña": "NF_1234",
+    "direccion": "presidente milei 333",
+    "telefono": "123456789"
+  }
+]

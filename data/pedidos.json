@@ -1,0 +1,42 @@
+[
+  {
+    "id_pedido": 1,
+    "id_usuario": 3,
+    "id_producto": 3,
+    "descripcion": "Zapatilla deportiva",
+    "fecha": "2026-04-03",
+    "total": 60000,
+    "direccion": "presidente milei 333",
+    "cantidad": 1
+  },
+  {
+    "id_pedido": 4,
+    "id_usuario": 3,
+    "id_producto": 2,
+    "descripcion": "Jean clásico azul",
+    "fecha": "2026-04-03",
+    "total": 25000,
+    "direccion": "presidente milei 333",
+    "cantidad": 1
+  },
+  {
+    "id_pedido": 2,
+    "id_usuario": 2,
+    "id_producto": 1,
+    "descripcion": "Remera de Algodón manga corta",
+    "fecha": "2026-04-11",
+    "total": 24000,
+    "direccion": "intendente fenoglio 123",
+    "cantidad": 2
+  },
+  {
+    "id_pedido": 3,
+    "id_usuario": 1,
+    "id_producto": 2,
+    "descripcion": "Jean clásico azul",
+    "fecha": "2026-04-06",
+    "total": 50000,
+    "direccion": "belgrano 31",
+    "cantidad": 2
+  }
+]
