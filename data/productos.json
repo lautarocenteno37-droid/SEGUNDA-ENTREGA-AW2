@@ -4,24 +4,21 @@
     "nombre": "Zapatilla",
     "descripcion": "Zapatilla deportiva azul con detalles blancos",
     "marca": "New Balance",
-    "precio": 60000,
-    "imagen": "remera.jpg"
+    "precio": 60000
   },
   {
     "id": 2,
     "nombre": "Jean",
     "descripcion": "Jean clásico azul",
     "marca": "Nike",
-    "precio": 25000,
-    "imagen": "jean.jpg"
+    "precio": 25000
   },
   {
     "id": 3,
     "nombre": "Zapatilla",
     "descripcion": "Zapatilla deportiva negras con detalles en blanco",
     "marca": "Adidas",
-    "precio": 60000,
-    "imagen": "zapatilla.jpg"
+    "precio": 60000
   },
   {
     "id": 4,
