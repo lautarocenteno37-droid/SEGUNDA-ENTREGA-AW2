@@ -3,6 +3,7 @@ import {readFile, writeFile} from 'fs/promises';
 import productosRoutes from './routes/productos.routes.js';
 import pedidosRoutes from './routes/pedidos.routes.js';
 import usersRoutes from './routes/users.routes.js';
+import postRoutes from './routes/post.routes.js';
 
 
 const app = express();
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use('/productos', productosRoutes);
 app.use('/pedidos', pedidosRoutes);
 app.use('/users', usersRoutes);
+app.use('/posts', postRoutes);
 
 
 
