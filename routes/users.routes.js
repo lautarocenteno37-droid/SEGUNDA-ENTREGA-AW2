@@ -43,14 +43,13 @@ router.post('/login', (req, res) => {
     const user = users.find(u => u.email === email && u.contraseña === contraseña);
     try {
     if (user) {
-        res.status(200).json({ message: 'BIENVENIDO ' + user.nombre + ' ' + user.apellido
-        , datos: {
+        res.status(200).json({  
             nombre: user.nombre,
             apellido: user.apellido,
             email: user.email,
             direccion: user.direccion,
             telefono: user.telefono
-        }
+        
         });
     } else {
         res.status(401).json({ error: 'Credenciales incorrectas' });
