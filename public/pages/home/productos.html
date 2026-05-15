@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Productos - CenteStyles</title>
+</head>
+<body class="bg-gray-950 text-gray-300">
+
+    <div id="app-navbar"></div>
+
+    <main class="p-10">
+        <h1 class="text-3xl font-bold">Catálogo de Productos</h1>
+    </main>
+
+    <script type="module">
+        // Importamos subiendo un nivel (..) y entrando a components
+        import { Navbar } from '../../components/navbar.js';
+
+        const navContainer = document.getElementById('app-navbar');
+        
+        // Renderizamos indicando que la página activa es 'productos'
+        navContainer.innerHTML = Navbar('productos', 'Cerrar sesión');
+    </script>
+</body>
+</html>
