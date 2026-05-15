@@ -38,5 +38,35 @@
     "total": 50000,
     "direccion": "belgrano 31",
     "cantidad": 2
+  },
+  {
+    "id_usuario": 3,
+    "id_producto": 2,
+    "descripcion": "Jean clásico azul",
+    "fecha": "2026-05-15",
+    "total": 25000,
+    "direccion": "Presidente Milei 333",
+    "cantidad": 1,
+    "id_pedido": 14
+  },
+  {
+    "id_usuario": 3,
+    "id_producto": 5,
+    "descripcion": "Zapatilla BlackPhantom-Travis scott",
+    "fecha": "2026-05-15",
+    "total": 130000,
+    "direccion": "Presidente Milei 333",
+    "cantidad": 1,
+    "id_pedido": 15
+  },
+  {
+    "id_usuario": 3,
+    "id_producto": 1,
+    "descripcion": "Zapatilla deportiva azul con detalles blancos",
+    "fecha": "2026-05-15",
+    "total": 60000,
+    "direccion": "Presidente Milei 333",
+    "cantidad": 1,
+    "id_pedido": 16
   }
 ]

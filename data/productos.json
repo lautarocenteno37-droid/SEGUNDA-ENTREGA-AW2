@@ -4,39 +4,34 @@
     "nombre": "Zapatilla",
     "descripcion": "Zapatilla deportiva azul con detalles blancos",
     "marca": "New Balance",
-    "precio": 60000,
-    "imagen": "../../assets/zapatilla-newbalance1.jpg"
+    "precio": 60000
   },
   {
     "id": 2,
     "nombre": "Jean",
     "descripcion": "Jean clásico azul",
     "marca": "Nike",
-    "precio": 25000,
-    "imagen": "../../assets/jean-nike1.jpg"
+    "precio": 25000
   },
   {
     "id": 3,
     "nombre": "Zapatilla",
     "descripcion": "Zapatilla deportiva negras con detalles en blanco",
     "marca": "Adidas",
-    "precio": 60000,
-    "imagen": "../../assets/zapatilla-adidas1.jpg"
+    "precio": 60000
   },
   {
     "id": 4,
-    "nombre": "gorra",
-    "descripcion": "gorra negra con bordado gris ",
+    "nombre": "Gorra",
+    "descripcion": "Gorra negra con bordado gris ",
     "precio": "23000",
-    "marca": "NewEra",
-    "imagen": "../../assets/gorra-newera1.jpg"
+    "marca": "NewEra"
   },
   {
     "id": 5,
     "nombre": "Zapatilla",
     "descripcion": "Zapatilla BlackPhantom-Travis scott",
     "precio": 130000,
-    "marca": "Nike",
-    "imagen": "../../assets/zapatilla-nike2.jpg"
+    "marca": "Nike"
   }
 ]

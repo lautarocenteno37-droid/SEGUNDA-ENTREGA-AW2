@@ -30,7 +30,7 @@ btnLogin.addEventListener('click', async () => {
         try {
             const user = await auth({ name, pass });
             addSession(user);
-            window.location.href = '../pages/home/';
+            window.location.href = '../pages/home/productos.html';
         } catch (error) {
             alert("no se encontró el usuario");
         }

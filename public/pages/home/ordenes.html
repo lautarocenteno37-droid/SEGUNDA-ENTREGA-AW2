@@ -2,26 +2,68 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <title>Órdenes - CenteStyles</title>
+    <title>Mis Órdenes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-950 text-gray-300">
-
-    <div id="app-navbar"></div>
-
-    <main class="p-10">
-        <h1 class="text-3xl font-bold">Catálogo de Órdenes</h1>
-    </main>
-
-    <script type="module">
-        // Importamos subiendo un nivel (..) y entrando a components
-        import { Navbar } from '../../components/navbar.js';
-
-        const navContainer = document.getElementById('app-navbar');
+    <div class="max-w-4xl mx-auto py-10 px-4">
         
-        // Renderizamos indicando que la página activa es 'ordenes'
-        navContainer.innerHTML = Navbar('ordenes', 'Cerrar sesión');
-    </script>
+        <div class="w-5/6 mx-auto bg-transparent border-2 border-gray-900 rounded-xl p-5 mb-10">
+            <h2 class="text-rose-500 font-bold mb-4 text-center uppercase tracking-widest text-xs">Historial de Compras</h2>
+            <div class="flex flex-wrap gap-4 justify-center">
+                <button onclick="window.location.href = './productos.html'" class="bg-transparent border-2 border-gray-700 px-6 py-2 rounded-2xl hover:bg-gray-700 transition-all font-semibold text-sm">
+                    Volver al Catálogo
+                </button>
+                <button onclick="window.location.href = './carrito.html'" class="bg-transparent border-2 border-gray-700 px-6 py-2 rounded-2xl hover:bg-gray-700 transition-all font-semibold text-sm text-gray-300">
+                    Carrito
+                </button>
+            </div>
+        </div>
+
+        <div id="orders-list" class="flex flex-col items-center gap-5">
+            </div>
+    </div>
+
+  <script type="module">
+    import { createOrderItem } from '../../components/OrderItem.js';
+
+    const loadOrders = async () => {
+        const container = document.getElementById('orders-list');
+        try {
+            const response = await fetch('http://localhost:3000/pedidos');
+            const orders = await response.json();
+
+            console.log("Datos recibidos:", orders); // Revisa la consola (F12) para ver si llegan
+
+            if (!orders || orders.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-20">
+                        <p class="italic text-gray-500 text-lg">No tienes pedidos registrados aún.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Mapeamos para asegurar que el componente reciba lo que espera
+            container.innerHTML = orders.map(order => {
+                // Si por alguna razón el JSON viene con campos distintos, aquí se normalizan
+                return createOrderItem({
+                    id_pedido: order.id_pedido || 'N/A',
+                    fecha: order.fecha || 'Sin fecha',
+                    descripcion: order.descripcion || 'Sin descripción',
+                    direccion: order.direccion || 'No especificada',
+                    cantidad: order.cantidad || 0,
+                    total: order.total || 0
+                });
+            }).join('');
+
+        } catch (error) {
+            console.error("Error cargando pedidos:", error);
+            container.innerHTML = '<p class="text-rose-500 font-bold text-center mt-10">Error al conectar con el servidor.</p>';
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', loadOrders);
+</script>
 </body>
 </html>

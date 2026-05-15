@@ -59,4 +59,29 @@ router.delete('/delete/:id', async (req, res) => {
     }
 });
 
+router.post('/add', async (req, res) => {
+    try {
+        const nuevosItems = req.body; // Recibe el array de productos del carrito
+        const fileData = await readFile('./data/pedidos.json', 'utf-8');
+        let pedidosExistentes = JSON.parse(fileData);
+
+        // Obtenemos el último ID de pedido para seguir la secuencia
+        let ultimoId = pedidosExistentes.length > 0 
+            ? Math.max(...pedidosExistentes.map(p => p.id_pedido)) 
+            : 0;
+
+        // Agregamos cada ítem del carrito con un nuevo ID único
+        nuevosItems.forEach(item => {
+            ultimoId++;
+            item.id_pedido = ultimoId;
+            pedidosExistentes.push(item);
+        });
+
+        await writeFile('./data/pedidos.json', JSON.stringify(pedidosExistentes, null, 2));
+        res.status(201).json({ message: 'Items agregados a pedidos.json' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error al escribir en el archivo JSON' });
+    }
+});
+
 export default router;

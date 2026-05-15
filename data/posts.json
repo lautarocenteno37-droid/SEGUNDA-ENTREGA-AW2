@@ -1,0 +1,30 @@
+[
+  {
+    "id": 2,
+    "author": "Patricia",
+    "text": "Me encanta cómo está quedando el diseño de la entrega de AW2.",
+    "likes": 27,
+    "dislikes": 4
+  },
+  {
+    "id": 3,
+    "author": "Nahuel",
+    "text": "Probando el sistema de likes. ¿Alguien sabe si ya funciona el almacenamiento persistente?",
+    "likes": 12,
+    "dislikes": 10
+  },
+  {
+    "id": 4,
+    "author": "Nahuel",
+    "text": "¡Acabo de publicar un nuevo post! Espero que les guste.",
+    "likes": 6,
+    "dislikes": 9
+  },
+  {
+    "author": "Lautaro Nahuel",
+    "text": "q tal",
+    "likes": 10,
+    "id": 5,
+    "dislikes": 10
+  }
+]

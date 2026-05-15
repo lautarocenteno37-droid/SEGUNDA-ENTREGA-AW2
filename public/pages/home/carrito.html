@@ -2,26 +2,34 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <title>Carrito - CenteStyles</title>
+    <title>Carrito de Compras</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-950 text-gray-300">
-
-    <div id="app-navbar"></div>
-
-    <main class="p-10">
-        <h1 class="text-3xl font-bold">Carrito de Compras</h1>
-    </main>
-
-    <script type="module">
-        // Importamos subiendo un nivel (..) y entrando a components
-        import { Navbar } from '../../components/navbar.js';
-
-        const navContainer = document.getElementById('app-navbar');
+    <div class="max-w-4xl mx-auto py-10 px-4">
         
-        // Renderizamos indicando que la página activa es 'carrito'
-        navContainer.innerHTML = Navbar('carrito', 'Cerrar sesión');
-    </script>
+        <div class="w-5/6 mx-auto bg-transparent border-2 border-gray-900 rounded-xl p-6 mb-10">
+            <h2 class="text-rose-500 font-bold mb-4 text-center uppercase tracking-widest text-xs">Confirmar Pedido</h2>
+            <div class="flex justify-center gap-4">
+                <button onclick="window.location.href = './productos.html'" class="bg-transparent border-2 border-gray-700 px-6 py-2 rounded-2xl hover:bg-gray-700 transition-all font-semibold text-sm">
+                    ← VOLVER AL CATÁLOGO
+                </button>
+            </div>
+        </div>
+
+        <div id="cartContainer" class="flex flex-col items-center gap-5"></div>
+
+        <div id="cartFooter" class="w-5/6 mx-auto mt-10 p-8 bg-transparent border-2 border-gray-900 rounded-xl hidden">
+            <div class="flex justify-between items-center mb-6">
+                <span class="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">Total acumulado</span>
+                <span id="totalPrice" class="text-3xl font-black text-rose-500">$0</span>
+            </div>
+            <button id="btnFinalizar" class="w-full bg-gray-900 border-2 border-gray-700 text-gray-200 py-4 rounded-2xl font-bold hover:bg-gray-800 transition-all uppercase tracking-widest text-xs">
+                Finalizar Compra
+            </button>
+        </div>
+    </div>
+
+    <script type="module" src="./carrito.js"></script>
 </body>
 </html>
