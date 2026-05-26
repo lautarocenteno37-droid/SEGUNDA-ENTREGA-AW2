@@ -1,8 +1,9 @@
-const btnLogin = document.getElementById('btnLogin');
 import { addSession } from '../utils/sessionstorage.controller.js';
 
+// --- SELECTORES ---
+const btnLogin = document.getElementById('btnLogin');
 
-const auth = async ({name, pass}) => {
+const auth = async ({ name, pass }) => {
     const user = await fetch('http://localhost:3000/users/login', {
         method: 'POST',
         headers: {
@@ -17,24 +18,27 @@ const auth = async ({name, pass}) => {
     }).catch(error => {
         console.log("Error:", error);
         throw new Error('Error en la peticion');
-    })
-return user;
+    });
+    return user;
 };
 
-btnLogin.addEventListener('click', async () => {
-    const name = document.getElementById('txtName').value;
-    const pass = document.getElementById('txtPass').value;
+if (btnLogin) {
+    btnLogin.addEventListener('click', async () => {
+        const name = document.getElementById('txtName').value;
+        const pass = document.getElementById('txtPass').value;
 
-    if (name !== '' && pass !== '') {
-        // se hace la busqueda del usuario en la base de datos
-        try {
-            const user = await auth({ name, pass });
-            addSession(user);
-            window.location.href = '../pages/home/productos.html';
-        } catch (error) {
-            alert("no se encontró el usuario");
+        if (name !== '' && pass !== '') {
+            try {
+                const user = await auth({ name, pass });
+                addSession(user);
+                
+                // Redirige al Home (index.html dentro de pages/home/)
+                window.location.href = './pages/home/index.html'; 
+            } catch (error) {
+                alert("no se encontró el usuario");
+            }
+        } else {
+            alert('Por favor, complete todos los campos');
         }
-    } else {
-        alert('Por favor, complete todos los campos');
-    }
-});
+    });
+}
