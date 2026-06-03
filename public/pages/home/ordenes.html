@@ -26,42 +26,61 @@
 
   <script type="module">
     import { createOrderItem } from '../../components/OrderItem.js';
+    import { getSession } from '../../utils/sessionstorage.controller.js';
 
     const loadOrders = async () => {
-        const container = document.getElementById('orders-list');
-        try {
-            const response = await fetch('http://localhost:3000/pedidos');
-            const orders = await response.json();
+    const container = document.getElementById('orders-list');
 
-            console.log("Datos recibidos:", orders); // Revisa la consola (F12) para ver si llegan
+    const usuarioLogueado = getSession();
 
-            if (!orders || orders.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-20">
-                        <p class="italic text-gray-500 text-lg">No tienes pedidos registrados aún.</p>
-                    </div>
-                `;
-                return;
-            }
+    if (!usuarioLogueado) {
+        container.innerHTML = `
+            <div class="text-center py-20">
+                <p class="italic text-rose-400 text-lg">Debes iniciar sesión para ver tu historial.</p>
+                <a href="../../index.html" class="text-blue-500 font-bold underline mt-4 block uppercase text-xs tracking-widest">Ir al Login</a>
+            </div>
+        `;
+        return;
+    }
 
-            // Mapeamos para asegurar que el componente reciba lo que espera
-            container.innerHTML = orders.map(order => {
-                // Si por alguna razón el JSON viene con campos distintos, aquí se normalizan
-                return createOrderItem({
-                    id_pedido: order.id_pedido || 'N/A',
-                    fecha: order.fecha || 'Sin fecha',
-                    descripcion: order.descripcion || 'Sin descripción',
-                    direccion: order.direccion || 'No especificada',
-                    cantidad: order.cantidad || 0,
-                    total: order.total || 0
-                });
-            }).join('');
+    try {
+        const response = await fetch(`http://localhost:3000/pedidos?usuario=${usuarioLogueado._id}`);
+        const orders = await response.json();
 
-        } catch (error) {
-            console.error("Error cargando pedidos:", error);
-            container.innerHTML = '<p class="text-rose-500 font-bold text-center mt-10">Error al conectar con el servidor.</p>';
+        console.log(`Órdenes de ${usuarioLogueado.nombre} recibidas de MongoDB:`, orders);
+
+        if (!orders || orders.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-20">
+                    <p class="italic text-gray-500 text-lg">No tienes pedidos registrados aún.</p>
+                </div>
+            `;
+            return;
         }
-    };
+        container.innerHTML = orders.map(order => {
+            const fechaFormateada = order.createdAt ? order.createdAt.split('T')[0] : 'Sin fecha';
+
+            const descripcionProductos = order.productos && order.productos.length > 0
+                ? order.productos.map(p => p.nombre || 'Producto').join(', ')
+                : order.descripcion || 'Sin descripción';
+
+            const cantidadTotal = order.cantidad || (order.productos ? order.productos.length : 0);
+
+            return createOrderItem({
+                _id: order._id, 
+                fecha: fechaFormateada,
+                descripcion: descripcionProductos,
+                direccion: order.direccion || 'No especificada', 
+                cantidad: cantidadTotal,
+                total: order.total || 0
+            });
+        }).join('');
+
+    } catch (error) {
+        console.error("Error cargando pedidos desde MongoDB:", error);
+        container.innerHTML = '<p class="text-rose-500 font-bold text-center mt-10">Error al conectar con el servidor.</p>';
+    }
+};
 
     document.addEventListener('DOMContentLoaded', loadOrders);
 </script>

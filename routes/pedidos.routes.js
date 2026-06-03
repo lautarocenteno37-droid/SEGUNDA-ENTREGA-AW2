@@ -1,42 +1,44 @@
 import { Router } from 'express';
-import { readFile, writeFile } from 'fs/promises';
-import { get_user_byid } from '../utils/user.js';
-import { get_producto_byid } from '../utils/producto.js';
-import { get_pedido_byid } from '../utils/pedido.js';
+import { createVenta, findAll, findById } from '../db/actions/ventas.action.js';
+import Venta from '../db/schemas/ventas.schema.js'; // Importamos el esquema directamente para el borrado
 
 const router = Router();
-const filePedidos = await readFile('./data/pedidos.json', 'utf-8');
-const pedidos = JSON.parse(filePedidos);
 
-//endpoint para obtener todos los pedidos (get)
-router.get('/', (req, res) => {
-    res.json(pedidos);
-}); 
-
-//endpoint para buscar un pedido por id (get)
-router.get('/byid/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    let aux_nombre = ''; 
-    let aux_producto = '';
+// 1. OBTENER TODOS LOS PEDIDOS (GET)
+// Tu action "findAll" ya viene con .populate({ path: 'productos' })
+// Ruta para obtener pedidos (Filtrado por usuario)
+router.get('/', async (req, res) => {
     try {
-    const pedido = pedidos.find(p => p.id_pedido === id);   
+        const { usuario } = req.query; // Captura el ?usuario=ID de la URL
+        
+        let filtro = {};
+        
+        // Si el frontend envió el ID del usuario, armamos el filtro para MongoDB
+        if (usuario) {
+            filtro = { usuario: usuario }; 
+        } else {
+            // Seguridad: Si intentan entrar directo a /pedidos sin loguearse, no les mostramos nada
+            return res.status(400).json({ error: 'Se requiere especificar un usuario' });
+        }
+
+        // Buscamos en la colección 'Venta' aplicando el filtro y haciendo populate de los productos
+        const pedidosData = await Venta.find(filtro).populate('productos');
+        
+        res.status(200).json(pedidosData);
+    } catch (error) {
+        console.error("Error obteniendo pedidos de MongoDB:", error);
+        res.status(500).json({ error: "No se pudieron obtener los pedidos" });
+    }
+});
+
+// 2. BUSCAR UN PEDIDO POR ID (GET)
+router.get('/byid/:id', async (req, res) => {
+    try {
+        const { id } = req.params; // ID de MongoDB (String hexadecimal largo)
+        const pedido = await findById(id);   
+        
         if (pedido) {
-
-            aux_nombre = get_user_byid(pedido.id_usuario);
-            aux_nombre = aux_nombre.nombre + ' ' + aux_nombre.apellido;
-
-            aux_producto = get_producto_byid(pedido.id_producto);
-            aux_producto = aux_producto.descripcion;
-
-            res.json({
-                usuario: aux_nombre,
-                productos: aux_producto,
-                fecha: pedido.fecha,
-                precio: pedido.precio,
-                cantidad: pedido.cantidad,
-                total: pedido.total,
-                direccion: pedido.direccion
-            });
+            res.status(200).json(pedido);
         } else {
             res.status(404).json({ error: 'Pedido no encontrado' });
         }
@@ -45,42 +47,46 @@ router.get('/byid/:id', (req, res) => {
     }
 });
 
-//endpoint para eliminar un pedido por id (delete)
-router.delete('/delete/:id', async (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = pedidos.findIndex(p => p.id_pedido === id);
-    if (index !== -1) {
-        const pedidoEliminado = pedidos[index];
-        pedidos.splice(index, 1);
-        await writeFile('./data/pedidos.json', JSON.stringify(pedidos, null, 2));
-        res.json( 'Pedido eliminado: ' + pedidoEliminado.descripcion + ' del usuario ' + get_user_byid(pedidoEliminado.id_usuario).nombre + ' ' + get_user_byid(pedidoEliminado.id_usuario).apellido + '- ID del usuario: ' + pedidoEliminado.id_usuario);
-    } else {
-        res.status(404).json({ error: 'Pedido no encontrado' });
+router.post('/add', async (req, res) => {
+    try {
+        const carrito = req.body; // Array de productos enviados desde el carrito.js
+
+        if (!carrito || carrito.length === 0) {
+            return res.status(400).json({ error: 'El carrito está vacío' });
+        }
+
+        // Extraemos los datos necesarios del primer elemento del carrito
+        const usuarioId = carrito[0].usuario;     // _id de MongoDB del usuario logueado
+        const direccionEntrega = carrito[0].direccion; // Dirección real del usuario
+        const productosIds = carrito.map(item => item._id);
+        const totalVenta = carrito.reduce((acc, item) => acc + (Number(item.precio) * (item.cantidad || 1)), 0);
+        const nuevaVenta = await Venta.create({
+            productos: productosIds,
+            total: totalVenta,
+            usuario: usuarioId,       
+            direccion: direccionEntrega 
+        });
+
+        res.status(201).json({ message: 'Pedido creado con éxito en MongoDB', venta: nuevaVenta });
+    } catch (error) {
+        console.error('Error al guardar el pedido:', error);
+        res.status(500).json({ error: 'Error al registrar el pedido en la base de datos' });
     }
 });
 
-router.post('/add', async (req, res) => {
+// 4. ELIMINAR UN PEDIDO POR ID (DELETE)
+router.delete('/delete/:id', async (req, res) => {
     try {
-        const nuevosItems = req.body; // Recibe el array de productos del carrito
-        const fileData = await readFile('./data/pedidos.json', 'utf-8');
-        let pedidosExistentes = JSON.parse(fileData);
+        const { id } = req.params;
+        const pedidoEliminado = await Venta.findByIdAndDelete(id);
 
-        // Obtenemos el último ID de pedido para seguir la secuencia
-        let ultimoId = pedidosExistentes.length > 0 
-            ? Math.max(...pedidosExistentes.map(p => p.id_pedido)) 
-            : 0;
-
-        // Agregamos cada ítem del carrito con un nuevo ID único
-        nuevosItems.forEach(item => {
-            ultimoId++;
-            item.id_pedido = ultimoId;
-            pedidosExistentes.push(item);
-        });
-
-        await writeFile('./data/pedidos.json', JSON.stringify(pedidosExistentes, null, 2));
-        res.status(201).json({ message: 'Items agregados a pedidos.json' });
+        if (pedidoEliminado) {
+            res.status(200).json(`Pedido #${id} eliminado con éxito de la base de datos.`);
+        } else {
+            res.status(404).json({ error: 'Pedido no encontrado' });
+        }
     } catch (error) {
-        res.status(500).json({ error: 'Error al escribir en el archivo JSON' });
+        res.status(500).json({ error: 'Error al eliminar el pedido' });
     }
 });
 

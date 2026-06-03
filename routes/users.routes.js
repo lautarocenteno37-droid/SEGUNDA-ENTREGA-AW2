@@ -1,85 +1,61 @@
-import  { Router } from "express";
-import { readFile, writeFile } from "fs/promises";
-import { get_user_byid } from "../utils/user.js";
-import { get_pedido_byid } from "../utils/pedido.js";
-import { get_producto_byid } from "../utils/producto.js";
+import { Router } from "express";
+import { createUser, findAllUsers, loginUser, deleteUserAndOrders } from "../db/actions/users.action.js";
 
-const fileUser = await readFile("./data/users.json", "utf-8");
-const users = JSON.parse(fileUser);
 const router = Router();
 
-const filePedidos = await readFile('./data/pedidos.json', 'utf-8');
-const pedidos = JSON.parse(filePedidos);
-
-//endpoint para obtener todos los usuarios (get)
-router.get('/', (req, res) => {
-    res.json(users);
+// 1. OBTENER TODOS LOS USUARIOS
+router.get('/', async (req, res) => {
+    try {
+        const users = await findAllUsers();
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ error: 'Error al obtener los usuarios' });
+    }
 }); 
 
-//endpoint para crear un nuevo usuario (post)
+// 2. CREAR UN NUEVO USUARIO (Registro)
 router.post('/newUser', async (req, res) => {
     const { nombre, apellido, email, contraseña, direccion, telefono } = req.body;
     try {
-        const newUser = {
-            id: users.length + 1,
-            nombre,
-            apellido,
-            email,
-            contraseña,
-            direccion,
-            telefono
-        };
-        users.push(newUser);
-        await writeFile('./data/users.json', JSON.stringify(users, null, 2));
+        const newUser = await createUser({ nombre, apellido, email, contraseña, direccion, telefono });
         res.status(201).json(newUser);
     } catch (error) {
-        res.status(500).json({ error: 'Error al crear el usuario' });
+        res.status(500).json({ error: 'Error al crear el usuario. Asegúrate de que el email no esté duplicado.' });
     }
 });
 
-//endpoint para iniciar sesion (post)
-router.post('/login', (req, res) => {
+// 3. INICIAR SESIÓN (Login)
+router.post('/login', async (req, res) => {
     const { email, contraseña } = req.body;
-    const user = users.find(u => u.email === email && u.contraseña === contraseña);
     try {
-    if (user) {
-        res.status(200).json({  
-            nombre: user.nombre,
-            apellido: user.apellido,
-            email: user.email,
-            direccion: user.direccion,
-            telefono: user.telefono
+        const user = await loginUser(email, contraseña);
         
-        });
-    } else {
-        res.status(401).json({ error: 'Credenciales incorrectas' });
-    }
+        if (user) {
+            // Devolvemos el objeto completo incluyendo el ._id que generó MongoDB para el sessionStorage del frontend
+            res.status(200).json(user);
+        } else {
+            res.status(401).json({ error: 'Credenciales incorrectas' });
+        }
     } catch (error) {
-        res.status(500).json({ error: 'Error al iniciar sesión' });
+        res.status(500).json({ error: 'Error al iniciar sesión' });
     }
 });
 
-//endpoint para eliminar un usuario por id (delete)
+// 4. ELIMINAR UN USUARIO POR ID Y SUS PEDIDOS (Delete en cascada)
 router.delete('/delete/:id', async (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = users.findIndex(u => u.id === id);
-    let aux_pedidos = '';
-    if (index !== -1) {
-        aux_pedidos = pedidos.filter(p => p.id_usuario === id);
-        const userEliminado = users[index];
-        const pedidosEliminados = pedidos.filter(p => p.id_usuario === id);
-        pedidosEliminados.forEach(p => {
-            const pedidoIndex = pedidos.findIndex(pe => pe.id_pedido === p.id_pedido);
-            if (pedidoIndex !== -1) {
-                pedidos.splice(pedidoIndex, 1);
-            }
-        });
-        users.splice(index, 1);
-        await writeFile('./data/users.json', JSON.stringify(users, null, 2));
-        await writeFile('./data/pedidos.json', JSON.stringify(pedidos, null, 2));
-        res.json( 'Usuario eliminado: ' + userEliminado.nombre + ' ' + userEliminado.apellido + ' con los siguientes pedidos eliminados: ' + JSON.stringify(pedidosEliminados));
-    } else {
-        res.status(404).json({ error: 'Usuario no encontrado' });
+    const { id } = req.params; // El ID de Mongo viene como String numérico/hexadecimal largo
+    try {
+        const resultado = await deleteUserAndOrders(id);
+        
+        if (resultado) {
+            res.status(200).json(
+                `Usuario eliminado: ${resultado.user.nombre} ${resultado.user.apellido} con los siguientes pedidos eliminados de la BD: ${JSON.stringify(resultado.pedidosEliminados)}`
+            );
+        } else {
+            res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Error al eliminar el usuario y sus registros' });
     }
 });
 

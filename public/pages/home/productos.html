@@ -8,18 +8,27 @@
 </head>
 <body class="bg-gray-950 text-gray-300">
     
-    <div class="flex justify-center mt-10">
-        <div class="w-5/6 bg-transparent border-2 border-gray-900 rounded-xl p-5">
-            <h2 class="text-rose-500 font-bold mb-4 text-center uppercase tracking-widest text-xs">Filtrar por categoría</h2>
-            <div class="flex flex-wrap gap-4 justify-center">
-                <button onclick="loadProducts('all')" class="bg-transparent border-2 border-gray-700 px-6 py-2 rounded-2xl hover:bg-gray-700 transition-all font-semibold text-sm">Todos</button>
-                <button onclick="loadProducts('Zapatilla')" class="bg-transparent border-2 border-gray-700 px-6 py-2 rounded-2xl hover:bg-gray-700 transition-all font-semibold text-sm">Zapatillas</button>
-                <button onclick="loadProducts('Jean')" class="bg-transparent border-2 border-gray-700 px-6 py-2 rounded-2xl hover:bg-gray-700 transition-all font-semibold text-sm">Jeans</button>
-                <button onclick="loadProducts('Gorra')" class="bg-transparent border-2 border-gray-700 px-6 py-2 rounded-2xl hover:bg-gray-700 transition-all font-semibold text-sm">Gorras</button>
-                <button onclick="window.location.href = './carrito.html'" class="bg-transparent border-2 border-gray-700 px-6 py-2 rounded-2xl hover:bg-gray-700 transition-all font-semibold text-sm">Carrito</button>
-            </div>
+<div class="flex justify-center mt-10">
+    <div class="w-5/6 bg-transparent border-2 border-gray-900 rounded-xl p-5">
+        <h2 class="text-rose-500 font-bold mb-4 text-center uppercase tracking-widest text-xs">Menú y Filtros</h2>
+        <div class="flex flex-wrap gap-4 justify-center">
+            <button onclick="loadProducts('all')" class="bg-transparent border-2 border-gray-700 px-6 py-2 rounded-2xl hover:bg-gray-700 transition-all font-semibold text-sm cursor-pointer">Todos</button>
+            <button onclick="loadProducts('Zapatilla')" class="bg-transparent border-2 border-gray-700 px-6 py-2 rounded-2xl hover:bg-gray-700 transition-all font-semibold text-sm cursor-pointer">Zapatillas</button>
+            <button onclick="loadProducts('Jean')" class="bg-transparent border-2 border-gray-700 px-6 py-2 rounded-2xl hover:bg-gray-700 transition-all font-semibold text-sm cursor-pointer">Jeans</button>
+            <button onclick="loadProducts('Gorra')" class="bg-transparent border-2 border-gray-700 px-6 py-2 rounded-2xl hover:bg-gray-700 transition-all font-semibold text-sm cursor-pointer">Gorras</button>
+            
+            <button onclick="window.location.href = './carrito.html'" class="bg-transparent border-2 border-gray-700 px-6 py-2 rounded-2xl hover:bg-gray-700 transition-all font-semibold text-sm cursor-pointer text-rose-400 border-rose-950 hover:bg-rose-950">
+                🛒 Carrito
+            </button>
+            <button onclick="window.location.href = './ordenes.html'" class="bg-transparent border-2 border-gray-700 px-6 py-2 rounded-2xl hover:bg-gray-700 transition-all font-semibold text-sm cursor-pointer text-blue-400 border-blue-950 hover:bg-blue-950">
+                📦 Mis Órdenes
+            </button>
+            <button id="btnCerrarSesion" class="bg-transparent border-2 border-red-900 px-6 py-2 rounded-2xl hover:bg-red-950 hover:text-red-200 transition-all font-semibold text-sm cursor-pointer text-red-400">
+                ❌ Cerrar Sesión
+            </button>
         </div>
     </div>
+</div>
 
     <div class="m-10 flex justify-center items-center flex-col gap-5" id="productContainer">
         </div>

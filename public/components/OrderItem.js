@@ -1,11 +1,19 @@
 export const createOrderItem = (pedido) => {
+    // 1. Obtenemos el ID de MongoDB (prioriza ._id, usa .id_pedido como plan B)
+    const mongoId = pedido._id || pedido.id_pedido || 'N/A';
+    
+    // 2. Si es un ID largo de Mongo, recortamos los últimos 6 caracteres para mantener el diseño limpio
+    const ordenCodigo = mongoId !== 'N/A' && mongoId.length > 6
+        ? mongoId.substring(mongoId.length - 6).toUpperCase() 
+        : mongoId;
+
     return `
     <div class="w-5/6 bg-transparent border-2 border-gray-900 rounded-xl p-5 my-2 mx-auto text-gray-300">
         <div class="grid grid-cols-3 items-center">
             <div class="col-span-3 md:col-span-2">
                 <div class="flex items-center gap-3 mb-2">
                     <span class="text-[10px] font-bold bg-gray-800 text-rose-500 px-2 py-1 rounded border border-gray-700 uppercase">
-                        ORDEN #${pedido.id_pedido}
+                        ORDEN #${ordenCodigo}
                     </span>
                     <p class="text-xs font-semibold text-gray-500">${pedido.fecha}</p>
                 </div>
@@ -28,7 +36,7 @@ export const createOrderItem = (pedido) => {
                     <p class="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em]">Total Pagado</p>
                     <span class="text-2xl font-black text-rose-500">$${Number(pedido.total).toLocaleString()}</span>
                     
-                    <div class="mt-3 flex items-center gap-2 text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                    <div class="mt-3 flex items-center gap-2 text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 w-fit">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                         </svg>

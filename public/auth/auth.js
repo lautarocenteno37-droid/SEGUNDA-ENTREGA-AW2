@@ -1,41 +1,62 @@
 import { addSession } from '../utils/sessionstorage.controller.js';
 
 // --- SELECTORES ---
-const btnLogin = document.getElementById('btnLogin');
+// Buscamos el formulario completo en lugar de solo el botón
+const formLogin = document.getElementById('formLogin');
 
+/**
+ * Función para realizar la petición HTTP al Backend
+ */
 const auth = async ({ name, pass }) => {
-    const user = await fetch('http://localhost:3000/users/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ "email": name, "contraseña": pass })
-    }).then(res => {
+    try {
+        const res = await fetch('http://localhost:3000/users/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ "email": name, "contraseña": pass })
+        });
+
+        // Si el estado no es exitoso (401, 500, etc.), leemos el error enviado por Express
         if (!res.ok) {
-            throw new Error('Error al iniciar sesión');
+            const errData = await res.json();
+            throw new Error(errData.error || 'Error al iniciar sesión');
         }
-        return res.json();
-    }).catch(error => {
-        console.log("Error:", error);
-        throw new Error('Error en la peticion');
-    });
-    return user;
+
+        // Si todo está bien, retornamos el objeto del usuario (que incluye el _id de Mongo)
+        return await res.json();
+
+    } catch (error) {
+        console.error("Error en auth:", error.message);
+        throw error; // Reenviamos el error exacto al bloque del evento
+    }
 };
 
-if (btnLogin) {
-    btnLogin.addEventListener('click', async () => {
-        const name = document.getElementById('txtName').value;
+// --- EVENT LISTENER ---
+if (formLogin) {
+    // Escuchamos el 'submit' del formulario (funciona con click en "Iniciar Sesión" y con la tecla Enter)
+    formLogin.addEventListener('submit', async (event) => {
+        // 1. Evitamos que el navegador recargue la página de forma nativa
+        event.preventDefault();
+
+        const name = document.getElementById('txtName').value.trim();
         const pass = document.getElementById('txtPass').value;
 
         if (name !== '' && pass !== '') {
             try {
+                // 2. Ejecutamos la petición al backend
                 const user = await auth({ name, pass });
+                
+                // 3. Guardamos los datos completos en el sessionStorage
                 addSession(user);
                 
-                // Redirige al Home (index.html dentro de pages/home/)
-                window.location.href = './pages/home/index.html'; 
+                // 4. Redirección exitosa a la tienda
+                alert(`¡Bienvenido/a, ${user.nombre}!`);
+                window.location.href = './pages/home/productos.html'; // Modificalo si preferís index.html
+                
             } catch (error) {
-                alert("no se encontró el usuario");
+                // Muestra el mensaje exacto del servidor (ej: "Credenciales incorrectas")
+                alert(error.message); 
             }
         } else {
             alert('Por favor, complete todos los campos');
