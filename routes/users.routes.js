@@ -1,4 +1,7 @@
 import { Router } from "express";
+import dotenv from 'dotenv/config';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 import { createUser, findAllUsers, loginUser, deleteUserAndOrders } from "../db/actions/users.action.js";
 
 const router = Router();
@@ -18,32 +21,68 @@ router.post('/newUser', async (req, res) => {
     const { nombre, apellido, email, contraseña, direccion, telefono } = req.body;
     try {
         const newUser = await createUser({ nombre, apellido, email, contraseña, direccion, telefono });
-        res.status(201).json(newUser);
+        
+
+        const secretoJWT = process.env.JWT_SECRET || 'ClaveSecretaDeRespaldoPorSiFallaElEnv';
+        const token = jwt.sign(
+            { id: newUser._id, email: newUser.email },
+            secretoJWT,
+            { expiresIn: '2h' }
+        );
+
+        res.status(201).json({
+            _id: newUser._id,
+            nombre: newUser.nombre,
+            email: newUser.email,
+            direccion: newUser.direccion,
+            token: token 
+        });
     } catch (error) {
         res.status(500).json({ error: 'Error al crear el usuario. Asegúrate de que el email no esté duplicado.' });
     }
 });
 
-// 3. INICIAR SESIÓN (Login)
 router.post('/login', async (req, res) => {
-    const { email, contraseña } = req.body;
     try {
-        const user = await loginUser(email, contraseña);
+        const { email, contraseña } = req.body;
         
-        if (user) {
-            // Devolvemos el objeto completo incluyendo el ._id que generó MongoDB para el sessionStorage del frontend
-            res.status(200).json(user);
-        } else {
-            res.status(401).json({ error: 'Credenciales incorrectas' });
+        // 1. Buscamos al usuario por email únicamente
+        const user = await loginUser(email); 
+
+        if (!user) {
+            console.log(`❌ No existe el email: ${email}`);
+            return res.status(401).json({ error: 'Credenciales incorrectas' });
         }
+        const contraseñaValida = await bcrypt.compare(contraseña, user.contraseña);
+
+        if (!contraseñaValida) {
+            console.log(`❌ Contraseña incorrecta para: ${email}`);
+            return res.status(401).json({ error: 'Credenciales incorrectas' });
+        }
+
+        const secretoJWT = process.env.JWT_SECRET || 'ClaveSecretaDeRespaldoPorSiFallaElEnv';
+        const token = jwt.sign(
+            { id: user._id, email: user.email }, 
+            secretoJWT,
+            { expiresIn: '2h' }
+        );
+
+        return res.status(200).json({
+            _id: user._id,
+            nombre: user.nombre,
+            email: user.email,
+            direccion: user.direccion,
+            token: token 
+        });
+
     } catch (error) {
-        res.status(500).json({ error: 'Error al iniciar sesión' });
+        console.error("❌ ERROR CRÍTICO EN LOGIN:", error);
+        return res.status(500).json({ error: 'Error interno en el servidor' });
     }
 });
-
 // 4. ELIMINAR UN USUARIO POR ID Y SUS PEDIDOS (Delete en cascada)
 router.delete('/delete/:id', async (req, res) => {
-    const { id } = req.params; // El ID de Mongo viene como String numérico/hexadecimal largo
+    const { id } = req.params; 
     try {
         const resultado = await deleteUserAndOrders(id);
         

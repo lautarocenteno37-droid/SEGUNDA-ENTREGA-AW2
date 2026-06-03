@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { verificarToken } from '../middlewares/auth.middleware.js';
 import { createVenta, findAll, findById } from '../db/actions/ventas.action.js';
 import Venta from '../db/schemas/ventas.schema.js'; // Importamos el esquema directamente para el borrado
 
@@ -47,30 +48,30 @@ router.get('/byid/:id', async (req, res) => {
     }
 });
 
-router.post('/add', async (req, res) => {
+router.post('/add', verificarToken, async (req, res) => {
     try {
-        const carrito = req.body; // Array de productos enviados desde el carrito.js
+        const carrito = req.body;
 
         if (!carrito || carrito.length === 0) {
             return res.status(400).json({ error: 'El carrito está vacío' });
         }
-
-        // Extraemos los datos necesarios del primer elemento del carrito
-        const usuarioId = carrito[0].usuario;     // _id de MongoDB del usuario logueado
-        const direccionEntrega = carrito[0].direccion; // Dirección real del usuario
+        const usuarioId = req.usuarioLogueado.id; 
+        
+        const direccionEntrega = carrito[0].direccion;
         const productosIds = carrito.map(item => item._id);
         const totalVenta = carrito.reduce((acc, item) => acc + (Number(item.precio) * (item.cantidad || 1)), 0);
+
         const nuevaVenta = await Venta.create({
             productos: productosIds,
             total: totalVenta,
-            usuario: usuarioId,       
-            direccion: direccionEntrega 
+            usuario: usuarioId, 
+            direccion: direccionEntrega
         });
 
-        res.status(201).json({ message: 'Pedido creado con éxito en MongoDB', venta: nuevaVenta });
+        res.status(201).json({ message: 'Pedido creado con éxito', venta: nuevaVenta });
     } catch (error) {
-        console.error('Error al guardar el pedido:', error);
-        res.status(500).json({ error: 'Error al registrar el pedido en la base de datos' });
+        console.error(error);
+        res.status(500).json({ error: 'Error al registrar el pedido' });
     }
 });
 

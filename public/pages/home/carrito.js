@@ -15,15 +15,14 @@ const renderCart = () => {
                 <a href="./productos.html" class="text-rose-500 font-bold underline mt-4 block uppercase text-xs tracking-widest">Ir a comprar</a>
             </div>
         `;
-        cartFooter?.classList.add('hidden');
+        if (cartFooter) cartFooter.classList.add('hidden');
         return;
     }
 
-    cartFooter?.classList.remove('hidden');
+    if (cartFooter) cartFooter.classList.remove('hidden');
     let total = 0;
 
     cartContainer.innerHTML = cart.map((product, index) => {
-        // Multiplica el precio por la cantidad (por si el frontend agrupa unidades)
         const cantidad = product.cantidad || 1;
         total += Number(product.precio) * cantidad;
 
@@ -66,27 +65,38 @@ document.getElementById('btnFinalizar')?.addEventListener('click', async () => {
     // Obtenemos el usuario de la sesión activa
     const usuarioLogueado = getSession();
 
+    // Guardias de seguridad en el Frontend antes de gastar recursos de red
     if (!usuarioLogueado) {
         alert("Debes iniciar sesión para finalizar la compra");
         window.location.href = '../../index.html'; 
         return;
     }
 
+    if (!usuarioLogueado.token) {
+        alert("Tu sesión no contiene un token válido o expiró. Por favor, volvé a iniciar sesión.");
+        window.location.href = '../../index.html';
+        return;
+    }
 
+    // Estructuramos el cuerpo del pedido de acuerdo a tu esquema
     const nuevasOrdenes = cart.map(p => ({
-
         usuario: usuarioLogueado._id, 
         _id: p._id || p.id_producto,
         descripcion: p.descripcion,
         precio: Number(p.precio),
         cantidad: p.cantidad || 1,
-        direccion: usuarioLogueado.direccion,
+        direccion: usuarioLogueado.direccion || 'Dirección no especificada',
         fecha: new Date().toISOString().split('T')[0]
     }));
+
     try {
         const res = await fetch('http://localhost:3000/pedidos/add', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                // Enviamos el token stringificado de la sesión de manera estricta
+                'Authorization': `Bearer ${usuarioLogueado.token}` 
+            },
             body: JSON.stringify(nuevasOrdenes)
         });
 
@@ -99,7 +109,7 @@ document.getElementById('btnFinalizar')?.addEventListener('click', async () => {
             alert(`Error al procesar el pedido: ${errData.error}`);
         }
     } catch (e) {
-        console.error("Error al procesar compra", e);
+        console.error("Error al procesar compra:", e);
         alert("Hubo un error de conexión con el servidor.");
     }
 });

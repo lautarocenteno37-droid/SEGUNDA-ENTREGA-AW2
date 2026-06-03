@@ -1,15 +1,37 @@
 import { connectToDatabase } from "../connection.js";
+import bcrypt from 'bcrypt';
 import UserSchema from "../schemas/users.schema.js";
 import VentaSchema from "../schemas/ventas.schema.js"; // Importamos ventas para la eliminación en cascada
 
 export const createUser = async (userData) => {
     try {
         await connectToDatabase();
-        const res = await UserSchema.create(userData);
-        console.log('Usuario creado en BD:', res);
+        
+        const salt = await bcrypt.genSalt(10);
+        const contraseñaEncriptada = await bcrypt.hash(userData.contraseña, salt);
+    
+        const usuarioConClaveSegura = {
+            ...userData,
+            contraseña: contraseñaEncriptada
+        };
+
+        const res = await UserSchema.create(usuarioConClaveSegura);
+        console.log('Usuario creado con clave encriptada:', res);
         return res;
     } catch (error) {
         console.error('Error al crear usuario:', error);
+        throw error;
+    }
+};
+
+
+export const loginUser = async (email) => {
+    try {
+        await connectToDatabase();
+        const user = await UserSchema.findOne({ email });
+        return user;
+    } catch (error) {
+        console.error('Error en login (BD):', error);
         throw error;
     }
 };
@@ -24,17 +46,6 @@ export const findAllUsers = async () => {
     }
 };
 
-export const loginUser = async (email, contraseña) => {
-    try {
-        await connectToDatabase();
-        // Buscamos un usuario que coincida con ambos campos
-        const user = await UserSchema.findOne({ email, contraseña });
-        return user;
-    } catch (error) {
-        console.error('Error en login (BD):', error);
-        throw error;
-    }
-};
 
 export const deleteUserAndOrders = async (id) => {
     try {
