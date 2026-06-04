@@ -8,7 +8,8 @@ const UserSchema = new Schema({
     email: { type: String, required: true, unique: true },
     contraseña: { type: String, required: true },
     direccion: { type: String, required: true },
-    telefono: { type: String, required: true }
+    telefono: { type: String, required: true },
+    rol: { type: String, default: "client" } // Valores posibles: "client" o "admin"
 }, { timestamps: true });
 
 const User = models.User || model('User', UserSchema);

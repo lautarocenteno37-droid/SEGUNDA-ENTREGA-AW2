@@ -1,34 +1,46 @@
 import { Router } from 'express';
 import { verificarToken } from '../middlewares/auth.middleware.js';
 import { createVenta, findAll, findById } from '../db/actions/ventas.action.js';
-import Venta from '../db/schemas/ventas.schema.js'; // Importamos el esquema directamente para el borrado
+import Venta from '../db/schemas/ventas.schema.js'; 
+import Producto from '../db/schemas/productos.schema.js';
 
 const router = Router();
 
-// 1. OBTENER TODOS LOS PEDIDOS (GET)
-// Tu action "findAll" ya viene con .populate({ path: 'productos' })
-// Ruta para obtener pedidos (Filtrado por usuario)
+// 1. OBTENER TODOS LOS PEDIDOS
 router.get('/', async (req, res) => {
     try {
-        const { usuario } = req.query; // Captura el ?usuario=ID de la URL
-        
+        const { categoria } = req.query;
         let filtro = {};
-        
-        // Si el frontend envió el ID del usuario, armamos el filtro para MongoDB
-        if (usuario) {
-            filtro = { usuario: usuario }; 
-        } else {
-            // Seguridad: Si intentan entrar directo a /pedidos sin loguearse, no les mostramos nada
-            return res.status(400).json({ error: 'Se requiere especificar un usuario' });
+
+        if (categoria) {
+            console.log("=== DETECTOR DE FILTRO ===");
+            console.log("1. Categoría recibida del frontend:", categoria);
+
+            // Buscamos productos en esa categoría
+            const productosEnCategoria = await Producto.find({ 
+                categoria: categoria.toLowerCase().trim() 
+            }).select('_id nombre categoria');
+
+            console.log("2. Productos encontrados en esa categoría en la BD:", productosEnCategoria);
+
+            // Mapeamos solo los IDs
+            const idsProductos = productosEnCategoria.map(p => p._id);
+            console.log("3. IDs de productos a buscar en las órdenes:", idsProductos);
+
+            // Filtramos las ventas
+            filtro = { "productos.producto": { $in: idsProductos } };
         }
 
-        // Buscamos en la colección 'Venta' aplicando el filtro y haciendo populate de los productos
-        const pedidosData = await Venta.find(filtro).populate('productos');
-        
-        res.status(200).json(pedidosData);
+        const ventas = await Venta.find(filtro)
+                        .populate('usuario', 'nombre email')
+                        .populate('productos.producto')
+                        .sort({ createdAt: -1 }); 
+
+        console.log(`4. Cantidad de órdenes encontradas para responder: ${ventas.length}`);
+        res.status(200).json(ventas);
     } catch (error) {
-        console.error("Error obteniendo pedidos de MongoDB:", error);
-        res.status(500).json({ error: "No se pudieron obtener los pedidos" });
+        console.error("Error al obtener los pedidos filtrados:", error);
+        res.status(500).json({ error: 'No se pudieron obtener los pedidos' });
     }
 });
 
@@ -48,6 +60,7 @@ router.get('/byid/:id', async (req, res) => {
     }
 });
 
+// 3. REGISTRAR UN PEDIDO Y RESTAR STOCK (POST)
 router.post('/add', verificarToken, async (req, res) => {
     try {
         const carrito = req.body;
@@ -55,22 +68,44 @@ router.post('/add', verificarToken, async (req, res) => {
         if (!carrito || carrito.length === 0) {
             return res.status(400).json({ error: 'El carrito está vacío' });
         }
-        const usuarioId = req.usuarioLogueado.id; 
         
-        const direccionEntrega = carrito[0].direccion;
-        const productosIds = carrito.map(item => item._id);
+        const usuarioId = req.usuarioLogueado.id || req.usuarioLogueado._id; 
+        const direccionEntrega = carrito[0].direccion || 'No especificada';
+        
+        // Estructuramos los productos para el documento de la venta
+        const productosParaGuardar = carrito.map(item => ({
+            producto: item._id || item.id_producto, 
+            cantidad: Number(item.cantidad) || 1,   
+            precioUnitario: Number(item.precio)     
+        }));
+
         const totalVenta = carrito.reduce((acc, item) => acc + (Number(item.precio) * (item.cantidad || 1)), 0);
 
+        // 1. Creamos la venta en la base de datos
         const nuevaVenta = await Venta.create({
-            productos: productosIds,
+            productos: productosParaGuardar, 
             total: totalVenta,
             usuario: usuarioId, 
             direccion: direccionEntrega
         });
 
-        res.status(201).json({ message: 'Pedido creado con éxito', venta: nuevaVenta });
+        // 🌟 2. CONTROL DE STOCK: Iteramos el carrito para restar las cantidades en MongoDB
+        // Usamos un bucle for...of porque maneja operaciones asíncronas (await) de forma secuencial y segura
+        for (const item of carrito) {
+            const productoId = item._id || item.id_producto;
+            const cantidadComprada = Number(item.cantidad) || 1;
+
+            // Usamos el operador $inc de MongoDB pasándole un número negativo para restar
+            await Producto.findByIdAndUpdate(
+                productoId,
+                { $inc: { stock: -cantidadComprada } }
+            );
+        }
+
+        // Devolvemos el OK al cliente
+        res.status(201).json({ message: 'Pedido creado con éxito y stock actualizado', venta: nuevaVenta });
     } catch (error) {
-        console.error(error);
+        console.error("Error al registrar el pedido y actualizar stock:", error);
         res.status(500).json({ error: 'Error al registrar el pedido' });
     }
 });

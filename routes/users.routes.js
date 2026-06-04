@@ -18,10 +18,9 @@ router.get('/', async (req, res) => {
 
 // 2. CREAR UN NUEVO USUARIO (Registro)
 router.post('/newUser', async (req, res) => {
-    const { nombre, apellido, email, contraseña, direccion, telefono } = req.body;
+    const { nombre, apellido, email, contraseña, direccion, telefono, rol } = req.body;
     try {
-        const newUser = await createUser({ nombre, apellido, email, contraseña, direccion, telefono });
-        
+        const newUser = await createUser({ nombre, apellido, email, contraseña, direccion, telefono, rol });
 
         const secretoJWT = process.env.JWT_SECRET || 'ClaveSecretaDeRespaldoPorSiFallaElEnv';
         const token = jwt.sign(
@@ -35,6 +34,7 @@ router.post('/newUser', async (req, res) => {
             nombre: newUser.nombre,
             email: newUser.email,
             direccion: newUser.direccion,
+            rol: newUser.rol,
             token: token 
         });
     } catch (error) {
@@ -72,6 +72,7 @@ router.post('/login', async (req, res) => {
             nombre: user.nombre,
             email: user.email,
             direccion: user.direccion,
+            rol: user.rol,
             token: token 
         });
 

@@ -34,9 +34,7 @@ const auth = async ({ name, pass }) => {
 
 // --- EVENT LISTENER ---
 if (formLogin) {
-    // Escuchamos el 'submit' del formulario (funciona con click en "Iniciar Sesión" y con la tecla Enter)
     formLogin.addEventListener('submit', async (event) => {
-        // 1. Evitamos que el navegador recargue la página de forma nativa
         event.preventDefault();
 
         const name = document.getElementById('txtName').value.trim();
@@ -47,15 +45,21 @@ if (formLogin) {
                 // 2. Ejecutamos la petición al backend
                 const user = await auth({ name, pass });
                 
-                // 3. Guardamos los datos completos en el sessionStorage
+                // 3. Guardamos los datos completos en el sessionStorage (incluyendo el rol y el token)
                 addSession(user);
                 
-                // 4. Redirección exitosa a la tienda
+                // 4. REDIRECCIÓN SEGÚN EL ROL
                 alert(`¡Bienvenido/a, ${user.nombre}!`);
-                window.location.href = './pages/home/productos.html'; // Modificalo si preferís index.html
+
+                if (user.rol === 'admin') {
+                    // Si es administrador, lo mandás a tu carpeta o vista de administración
+                    window.location.href = './pages/admin/dashboard.html'; 
+                } else {
+                    // Si es cliente común (o default), va a la tienda tradicional
+                    window.location.href = './pages/home/productos.html'; 
+                }
                 
             } catch (error) {
-                // Muestra el mensaje exacto del servidor (ej: "Credenciales incorrectas")
                 alert(error.message); 
             }
         } else {

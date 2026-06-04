@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Administración - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 text-gray-300 font-sans">
+
+    <div class="max-w-6xl mx-auto py-10 px-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b border-gray-900 pb-4 gap-4">
+    <h1 class="text-3xl font-bold text-rose-500 uppercase tracking-wider">Dashboard de Administración</h1>
+    
+    <button id="btn-logout" class="bg-gray-900 hover:bg-rose-950 border border-gray-800 hover:border-rose-800 text-gray-400 hover:text-rose-400 px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+        </svg>
+        Cerrar Sesión
+    </button>
+</div>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-10">
+            <h2 id="form-title" class="text-xl font-semibold text-gray-100 mb-4 uppercase text-xs tracking-widest text-rose-400">Crear Nuevo Producto</h2>
+            <form id="product-form" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input type="hidden" id="product-id">
+                <div>
+                    <label class="block text-xs font-bold uppercase mb-1 text-gray-400">Nombre del Producto</label>
+                    <input type="text" id="prod-nombre" required class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-rose-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase mb-1 text-gray-400">Marca</label>
+                    <input type="text" id="prod-marca" required placeholder="Ej: Nike, Levi's" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-rose-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase mb-1 text-gray-400">Categoría</label>
+                    <input type="text" id="prod-categoria" placeholder="Ej: remeras, pantalones, zapatillas" 
+                        class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-rose-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase mb-1 text-gray-400">Precio ($)</label>
+                    <input type="number" id="prod-precio" placeholder="Ej: 20000" required class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-rose-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase mb-1 text-gray-400">Stock Inicial</label>
+                    <input type="number" id="prod-stock" required default="0" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-rose-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold uppercase mb-1 text-gray-400">Imagen (URL)</label>
+                    <input type="text" id="prod-imagen" placeholder="https://..." class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-rose-500">
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block text-xs font-bold uppercase mb-1 text-gray-400">Descripción</label>
+                    <textarea id="prod-descripcion" rows="2" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-rose-500"></textarea>
+                </div>
+                <div class="md:col-span-3 flex justify-end gap-3 mt-2">
+                    <button type="button" id="btn-cancelar" class="hidden bg-transparent border border-gray-700 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all">Cancelar</button>
+                    <button type="submit" id="btn-guardar" class="bg-rose-600 px-6 py-2 rounded-xl text-sm font-semibold text-white hover:bg-rose-500 transition-all">Guardar Producto</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="bg-transparent border-2 border-gray-900 rounded-xl p-6 mb-10">
+            <h2 class="text-lg font-bold text-gray-200 mb-4 uppercase tracking-wider">Listado de Productos</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-800 text-gray-400 uppercase text-xs">
+                            <th class="py-3 px-4">Nombre / Marca</th>
+                            <th class="py-3 px-4">Precio</th>
+                            <th class="py-3 px-4">Stock actual</th>
+                            <th class="py-3 px-4 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-productos">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="mb-4 flex flex-wrap gap-2 items-center">
+            <span class="text-xs font-semibold text-gray-500 uppercase mr-2">Filtrar Historial por:</span>
+            <button onclick="loadAllOrders('')" class="px-3 py-1 bg-gray-800 text-xs rounded hover:bg-gray-700 text-white transition-all">Todas</button>
+            <button onclick="loadAllOrders('zapatilla')" class="px-3 py-1 bg-gray-800 text-xs rounded hover:bg-gray-700 text-white transition-all">Zapatillas</button>
+            <button onclick="loadAllOrders('gorra')" class="px-3 py-1 bg-gray-800 text-xs rounded hover:bg-gray-700 text-white transition-all">Gorras</button>
+            <button onclick="loadAllOrders('pantalon')" class="px-3 py-1 bg-gray-800 text-xs rounded hover:bg-gray-700 text-white transition-all">Pantalones</button>
+        </div>
+        <div class="bg-transparent border-2 border-gray-900 rounded-xl p-6">
+            <h2 class="text-lg font-bold text-gray-200 mb-4 uppercase tracking-wider">Historial Global de Órdenes</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-800 text-gray-400 uppercase text-xs">
+                            <th class="py-3 px-4">ID Orden</th>
+                            <th class="py-3 px-4">Cliente</th>
+                            <th class="py-3 px-4">Artículos</th>
+                            <th class="py-3 px-4">Dirección</th>
+                            <th class="py-3 px-4">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-ordenes">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./dashboard.js"></script>
+</body>
+</html>

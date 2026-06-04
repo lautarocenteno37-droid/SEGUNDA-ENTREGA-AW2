@@ -6,8 +6,10 @@ const ProductoSchema = new Schema({
     nombre: { type: String, required: true },
     precio: { type: Number, required: true },
     stock: { type: Number, default: 0 },
-    descripcion: { type: String, required: true },
-    marca: { type: String, required: true }
+    imagen: { type: String, default: "" },  
+    descripcion: { type: String, default: "" }, 
+    marca: { type: String, default: "Genérica" },
+    categoria: { type: String, lowercase: true, trim: true }
 });
 
 const Producto = models.Producto || model('Producto', ProductoSchema);

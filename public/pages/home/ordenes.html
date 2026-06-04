@@ -60,18 +60,31 @@
         container.innerHTML = orders.map(order => {
             const fechaFormateada = order.createdAt ? order.createdAt.split('T')[0] : 'Sin fecha';
 
-            const descripcionProductos = order.productos && order.productos.length > 0
-                ? order.productos.map(p => p.nombre || 'Producto').join(', ')
-                : order.descripcion || 'Sin descripción';
+            // 1. Armamos la lista de nombres visibles
+           const descripcionProductos = order.productos && order.productos.length > 0
+            ? order.productos.map(p => {
+                // Si el populate se hizo con éxito, p.producto es un objeto y tiene su .nombre
+                return (p.producto && p.producto.nombre) ? p.producto.nombre : 'Producto';
+            }).join(', ')
+            : order.descripcion
 
-            const cantidadTotal = order.cantidad || (order.productos ? order.productos.length : 0);
+            // 🌟 2. CÁLCULO MATEMÁTICO REAL: Sumamos las cantidades de cada producto interno
+            let cantidadTotal = 0;
+            if (order.productos && order.productos.length > 0) {
+                // Recorre y acumula: p.cantidad (si por alguna razón no existe, usa 1 por defecto)
+                cantidadTotal = order.productos.reduce((acumulador, p) => acumulador + (Number(p.cantidad) || 1), 0);
+            } else {
+                // Plan B por si la orden vino estructurada de forma vieja
+                cantidadTotal = Number(order.cantidad) || 0;
+            }
 
+            // Retornamos el componente enviándole el total exacto de unidades calculadas
             return createOrderItem({
                 _id: order._id, 
                 fecha: fechaFormateada,
                 descripcion: descripcionProductos,
                 direccion: order.direccion || 'No especificada', 
-                cantidad: cantidadTotal,
+                cantidad: cantidadTotal, 
                 total: order.total || 0
             });
         }).join('');

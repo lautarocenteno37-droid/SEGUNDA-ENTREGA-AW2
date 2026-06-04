@@ -1,11 +1,19 @@
 import { connectToDatabase } from "../connection.js";
 import ProductoSchema from "../schemas/productos.schema.js";
 
-// 1. Agregamos 'marca' porque ahora es obligatoria (required: true) en tu esquema
-export const createProducto = async (nombre, descripcion, precio, stock, marca) => {
+// 1. CREAR PRODUCTO (Le sumamos 'imagen' para que lo guarde en la DB)
+export const createProducto = async (nombre, descripcion, precio, stock, marca, categoria, imagen) => {
     try {
         await connectToDatabase();
-        const res = await ProductoSchema.create({ nombre, descripcion, precio, stock, marca });
+        const res = await ProductoSchema.create({ 
+            nombre, 
+            descripcion, 
+            precio, 
+            stock, 
+            marca,
+            categoria,
+            imagen: imagen || ''
+        });
         console.log('Producto creado exitosamente:', res);
         return res;
     } catch (error) {
@@ -14,11 +22,11 @@ export const createProducto = async (nombre, descripcion, precio, stock, marca) 
     }
 };
 
-// 2. Limpiamos el .populate porque ya no existe el campo categoria
+// 2. BUSCAR TODOS
 export const findAll = async () => {
     try {
         await connectToDatabase();
-        const res = await ProductoSchema.find(); // Sin populate
+        const res = await ProductoSchema.find(); 
         return res;
     } catch (error) {
         console.error('Error al obtener los productos:', error);
@@ -26,11 +34,11 @@ export const findAll = async () => {
     }
 };
 
-// 3. Limpiamos el .populate también en la búsqueda por ID
+// 3. BUSCAR POR ID
 export const findById = async (id) => {
     try {
         await connectToDatabase();
-        const res = await ProductoSchema.findById(id); // Sin populate
+        const res = await ProductoSchema.findById(id); 
         return res;
     } catch (error) {
         console.error('Error al obtener el producto:', error);
@@ -38,12 +46,11 @@ export const findById = async (id) => {
     }
 };
 
-// 4. Corregimos para que busque por el campo 'nombre' (que guarda "Zapatilla", "Jean", etc.)
+// 4. BUSCAR POR CATEGORÍA (O FILTRO DE NOMBRE)
 export const findByCategoria = async (categoria) => {
     try {
         await connectToDatabase();
-        // Ahora busca donde el campo 'nombre' coincida con el texto del filtro
-        const res = await ProductoSchema.find({ nombre: categoria }); 
+        const res = await ProductoSchema.find({ categoria: categoria }); 
         return res;
     } catch (error) {
         console.error('Error al obtener los productos por categoría:', error);
@@ -51,10 +58,37 @@ export const findByCategoria = async (categoria) => {
     }
 };
 
+// 5. ACTUALIZAR PRODUCTO COMPLETO (🌟 NUEVO: Lo usa el PUT de tus rutas)
+export const updateProducto = async (id, datosActualizados) => {
+    try {
+        await connectToDatabase();
+        // { new: true } devuelve el documento ya modificado para mandarlo al frontend
+        const res = await ProductoSchema.findByIdAndUpdate(id, datosActualizados, { new: true });
+        console.log('Producto actualizado exitosamente:', res);
+        return res;
+    } catch (error) {
+        console.error('Error al actualizar el producto en el action:', error);
+        throw error;
+    }
+};
+
+// 6. BORRAR PRODUCTO POR ID (🌟 NUEVO: Lo usa el DELETE de tus rutas)
+export const deleteProducto = async (id) => {
+    try {
+        await connectToDatabase();
+        const res = await ProductoSchema.findByIdAndDelete(id);
+        console.log('Producto eliminado exitosamente:', res);
+        return res;
+    } catch (error) {
+        console.error('Error al eliminar el producto en el action:', error);
+        throw error;
+    }
+};
+
+// 7. ACTUALIZAR STOCK
 export const updateStock = async (id, stock) => {
     try {
         await connectToDatabase();
-        // Agregamos { new: true } para que devuelva el producto ya actualizado con el nuevo stock
         const res = await ProductoSchema.findByIdAndUpdate(id, { stock }, { new: true });
         return res;
     } catch (error) {

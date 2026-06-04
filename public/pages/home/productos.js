@@ -1,72 +1,111 @@
 import { createProductItem } from '../../components/ProductItem.js';
-// Importamos las funciones de control de sesión desde tu controlador
 import { getSession, removeSession } from '../../utils/sessionstorage.controller.js';
 
 // --- SEGURIDAD: CONTROL DE ACCESO ---
-// Si un usuario intenta entrar escribiendo la URL sin haberse logueado, lo rebota al login
 if (!getSession()) {
     window.location.href = '../../index.html';
 }
 
 const productContainer = document.getElementById('productContainer');
 
+// Variable global en el objeto window para recordar los productos traídos del backend
+window.listaProductosGlobal = [];
+
 /**
  * Carga y filtra los productos desde MongoDB
- * Se expone en el objeto window para que los botones onclick nativos puedan ejecutarla
  */
 window.loadProducts = async (category = 'all') => {
     try {
-        const response = await fetch('http://localhost:3000/productos');
+        // Si no es 'all', le pedimos al backend solo esa categoría
+        const url = category !== 'all' 
+            ? `http://localhost:3000/productos?categoria=${encodeURIComponent(category)}`
+            : 'http://localhost:3000/productos';
+
+        const response = await fetch(url);
         let products = await response.json();
 
-        // Filtrado dinámico por categoría basándose en la propiedad 'nombre' de tu documento en la BD
-        if (category !== 'all') {
-            products = products.filter(p => p.nombre === category);
-        }
+        // Guardamos para uso global (carrito)
+        window.listaProductosGlobal = Array.isArray(products) ? products : [];
 
         if (productContainer) {
-            if (products.length === 0) {
-                productContainer.innerHTML = `
-                    <div class="text-center py-20">
-                        <p class="italic text-gray-500 text-lg">No se encontraron productos en esta categoría.</p>
-                    </div>
-                `;
+            if (window.listaProductosGlobal.length === 0) {
+                productContainer.innerHTML = `<p class="text-center py-20 text-gray-500">No hay productos en esta categoría.</p>`;
                 return;
             }
-            // Mapea los productos usando tu componente ProductItem
-            productContainer.innerHTML = products.map(p => createProductItem(p)).join('');
+            productContainer.innerHTML = window.listaProductosGlobal.map(p => createProductItem(p)).join('');
         }
     } catch (error) {
-        console.error("Error al cargar productos desde MongoDB:", error);
-        if (productContainer) {
-            productContainer.innerHTML = `
-                <p class="text-rose-500 font-bold text-center mt-10">Error al conectar con el servidor de productos.</p>
-            `;
-        }
+        console.error("Error al cargar productos:", error);
     }
 };
 
 /**
- * Añade un producto seleccionado al almacenamiento local del carrito
- * Modificado para dar soporte tanto a estructuras viejas como a los _id nuevos de Mongo
+ * 🌟 CONTROL DE INTERFAZ: Modifica el número visual del contador de cada tarjeta
  */
-window.addToCart = (product) => {
+window.cambiarCantidad = (id, cambio) => {
+    const contador = document.getElementById(`cantidad-${id}`);
+    if (contador) {
+        let cantidadActual = parseInt(contador.innerText);
+        cantidadActual += cambio;
+        if (cantidadActual < 1) cantidadActual = 1; // Evitamos que baje de 1
+        contador.innerText = cantidadActual;
+    }
+};
+
+/**
+ * 🌟 AÑADIR CON CANTIDAD: Captura las unidades elegidas y las empuja al localStorage
+ */
+window.agregarAlCarritoConCantidad = (id) => {
+    // 1. Buscamos el producto en memoria
+    const productoEncontrado = window.listaProductosGlobal.find(p => (p._id || p.id) === id);
+
+    if (!productoEncontrado) {
+        console.error("No se encontró el producto con ID:", id);
+        return;
+    }
+
+    // 🌟 VALIDACIÓN DE STOCK (Seguridad en lógica)
+    if (productoEncontrado.stock <= 0) {
+        alert(`Lo sentimos, "${productoEncontrado.nombre}" ya no tiene stock disponible.`);
+        return;
+    }
+
+    const contador = document.getElementById(`cantidad-${id}`);
+    const cantidadSeleccionada = contador ? parseInt(contador.innerText) : 1;
+
+    // 🌟 VALIDACIÓN DE CANTIDAD VS STOCK
+    if (cantidadSeleccionada > productoEncontrado.stock) {
+        alert(`No puedes agregar ${cantidadSeleccionada} unidad(es). Solo quedan ${productoEncontrado.stock} disponibles.`);
+        return;
+    }
+
     let cart = JSON.parse(localStorage.getItem('carrito')) || [];
     
-    // Verificamos si ya existe el producto en el carrito para incrementar su cantidad (Opcional pero recomendado)
-    const idProducto = product._id || product.id;
+    // Verificamos si ya existe el producto en el carrito
+    const idProducto = productoEncontrado._id || productoEncontrado.id;
     const productoExistente = cart.find(p => (p._id || p.id) === idProducto);
 
+    // 🌟 NUEVA VALIDACIÓN: Si ya estaba en el carrito, que la suma total no supere el stock
+    const cantidadActualEnCarrito = productoExistente ? productoExistente.cantidad : 0;
+    if ((cantidadActualEnCarrito + cantidadSeleccionada) > productoEncontrado.stock) {
+        alert(`No puedes agregar esa cantidad. Ya tienes ${cantidadActualEnCarrito} en el carrito y el stock total es de ${productoEncontrado.stock}.`);
+        return;
+    }
+
     if (productoExistente) {
-        productoExistente.cantidad = (productoExistente.cantidad || 1) + 1;
+        productoExistente.cantidad += cantidadSeleccionada;
     } else {
-        cart.push({ ...product, cantidad: 1 });
+        cart.push({ ...productoEncontrado, cantidad: cantidadSeleccionada });
     }
 
     localStorage.setItem('carrito', JSON.stringify(cart));
-    alert(`${product.nombre} ${product.marca || ''} se agregó con éxito al carrito.`);
+    alert(`¡Éxito! Se agregaron ${cantidadSeleccionada} unidad(es) de "${productoEncontrado.nombre}" al carrito.`);
+    
+    // Reseteamos el contador visual
+    if (contador) contador.innerText = "1";
 };
 
+// --- MANEJO DE SESIÓN ---
 document.getElementById('btnCerrarSesion')?.addEventListener('click', () => {
     const confirmar = confirm("¿Estás seguro de que quieres cerrar sesión?");
     

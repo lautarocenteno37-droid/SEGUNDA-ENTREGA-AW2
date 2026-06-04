@@ -1,19 +1,40 @@
 import { Router } from 'express';
-import { createProducto, findAll, findById, findByCategoria, updateStock } from "../db/actions/productos.action.js";
+import { 
+    createProducto, 
+    findAll, 
+    findById, 
+    updateProducto, 
+    deleteProducto, 
+    updateStock 
+} from "../db/actions/productos.action.js";
+import Producto from '../db/schemas/productos.schema.js';
 
 const router = Router();
 
-// 1. RUTA RAÍZ: Cambiada para que responda directamente al catálogo del frontend
+// 1. OBTENER TODOS LOS PRODUCTOS (CATÁLOGO / DASHBOARD)
 router.get('/', async (req, res) => {
     try {
-        const productos = await findAll();
-        // Devolvemos directamente el array para que el frontend pueda hacer el .filter() o .map() sin problemas
+        const { categoria } = req.query; // Captura si viene ?categoria=algo
+        
+        let filtro = {};
+        // Si el cliente mandó una categoría por la URL, filtramos por ella
+        if (categoria) {
+            filtro = { categoria: categoria.toLowerCase().trim() };
+        }
+
+        // Buscamos en MongoDB usando el filtro determinado
+        const productos = await Producto.find(filtro);
+        
+        // Respondemos siempre con el array resultante
         res.status(200).json(productos);
     } catch (error) {
-        console.error('Error al obtener los productos:', error);
-        res.status(500).json({ error: 'Error al obtener los productos' });
+        // Esto te va a mostrar el error exacto en la terminal negra de tu VS Code:
+        console.error('ERROR CRÍTICO AL BUSCAR PRODUCTOS:', error);
+        res.status(500).json({ error: 'Error al obtener productos' });
     }
 });
+
+
 
 // 2. BUSCAR POR ID
 router.get('/byId/:id', async (req, res) => {
@@ -25,18 +46,17 @@ router.get('/byId/:id', async (req, res) => {
         }
         res.status(200).json(producto);
     } catch (error) {
+        console.error('Error al obtener el producto:', error);
         res.status(500).json({ error: 'Error al obtener el producto' });
    }
 });
 
-
-
-// 4. CREAR PRODUCTO (POSTMAN / BACKOFFICE)
-router.post('/create', async (req, res) => {
-    const { nombre, descripcion, precio, stock } = req.body;
+// 3. CREAR PRODUCTO (POST)
+router.post(['/', '/create'], async (req, res) => {
+    const { nombre, descripcion, precio, stock, marca, imagen, categoria } = req.body;
     try {
-        const nuevoProducto = await createProducto(nombre, descripcion, precio, stock);
-        console.log('Producto creado con éxito:', nuevoProducto);
+        // Llamamos directamente a tu action actualizado respetando el orden de los parámetros
+        const nuevoProducto = await createProducto(nombre, descripcion, precio, stock, marca, categoria, imagen);
         res.status(201).json(nuevoProducto);
     } catch (error) {
         console.error('Error al crear el producto en la ruta:', error);
@@ -44,7 +64,42 @@ router.post('/create', async (req, res) => {
     }
 });
 
-// 5. ACTUALIZAR STOCK (Se ejecuta internamente al procesar órdenes)
+// 4. MODIFICAR PRODUCTO EXISTENTE (PUT /:id) -> ¡Limpio usando el Action!
+router.put('/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Le pasamos al action el ID y el req.body (que trae los datos nuevos del formulario)
+        const productoActualizado = await updateProducto(id, req.body);
+
+        if (!productoActualizado) {
+            return res.status(404).json({ error: 'No se encontró el producto para actualizar' });
+        }
+
+        res.status(200).json(productoActualizado);
+    } catch (error) {
+        console.error('Error al actualizar el producto en la ruta:', error);
+        res.status(500).json({ error: 'Error interno al actualizar el producto' });
+    }
+});
+
+// 5. BORRAR PRODUCTO (DELETE /:id) -> ¡Limpio usando el Action!
+router.delete('/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const productoEliminado = await deleteProducto(id);
+
+        if (!productoEliminado) {
+            return res.status(404).json({ error: 'Producto no encontrado' });
+        }
+
+        res.status(200).json({ message: 'Producto eliminado con éxito del catálogo' });
+    } catch (error) {
+        console.error('Error al eliminar el producto en la ruta:', error);
+        res.status(500).json({ error: 'Error interno al eliminar el producto' });
+    }
+});
+
+// 6. ACTUALIZAR STOCK INTERNO (PATCH)
 router.patch('/updateStock/:id', async (req, res) => {
     const { id } = req.params;
     const { stock } = req.body;

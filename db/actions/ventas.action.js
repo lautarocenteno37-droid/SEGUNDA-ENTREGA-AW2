@@ -13,14 +13,18 @@ export const createVenta = async (productos, total, usuario) => {
     }
 };
 
-export const findAll = async () => {
+export const findAll = async (filtro = {}) => {
     try {
         await connectToDatabase();
-        const res = await ventasSchema.find().populate({ path: 'productos' });
-        console.log('Ventas encontradas:', res);
+        
+        // Buscamos con el filtro y encadenamos los populates
+        const res = await ventasSchema.find(filtro)
+            .populate('usuario', 'nombre email') // Trae solo nombre y mail del comprador
+            .populate('productos.producto');     // Trae los datos de los productos (nombre, precio, etc.)
+            
         return res;
     } catch (error) {
-        console.error('Error al encontrar las ventas:', error);
+        console.error('Error al obtener las ventas en el action:', error);
         throw error;
     }
 };
