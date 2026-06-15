@@ -32,4 +32,4 @@ app.listen(port, async () => {
   } catch (error) {
     console.error('❌ Error crítico al conectar a MongoDB durante el inicio:', error);
   }
-});
+}); //saludos
