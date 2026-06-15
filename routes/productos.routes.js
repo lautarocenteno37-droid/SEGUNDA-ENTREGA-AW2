@@ -14,21 +14,17 @@ const router = Router();
 // 1. OBTENER TODOS LOS PRODUCTOS (CATÁLOGO / DASHBOARD)
 router.get('/', async (req, res) => {
     try {
-        const { categoria } = req.query; // Captura si viene ?categoria=algo
+        const { categoria } = req.query;
         
         let filtro = {};
-        // Si el cliente mandó una categoría por la URL, filtramos por ella
         if (categoria) {
             filtro = { categoria: categoria.toLowerCase().trim() };
         }
-
-        // Buscamos en MongoDB usando el filtro determinado
         const productos = await Producto.find(filtro);
         
-        // Respondemos siempre con el array resultante
         res.status(200).json(productos);
     } catch (error) {
-        // Esto te va a mostrar el error exacto en la terminal negra de tu VS Code:
+        
         console.error('ERROR CRÍTICO AL BUSCAR PRODUCTOS:', error);
         res.status(500).json({ error: 'Error al obtener productos' });
     }
@@ -64,7 +60,7 @@ router.post(['/', '/create'], async (req, res) => {
     }
 });
 
-// 4. MODIFICAR PRODUCTO EXISTENTE (PUT /:id) -> ¡Limpio usando el Action!
+// 4. MODIFICAR PRODUCTO EXISTENTE
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -82,7 +78,7 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// 5. BORRAR PRODUCTO (DELETE /:id) -> ¡Limpio usando el Action!
+// 5. BORRAR PRODUCTO 
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     try {

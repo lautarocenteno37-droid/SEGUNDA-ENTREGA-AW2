@@ -42,20 +42,20 @@ if (formLogin) {
 
         if (name !== '' && pass !== '') {
             try {
-                // 2. Ejecutamos la petición al backend
+                
                 const user = await auth({ name, pass });
                 
-                // 3. Guardamos los datos completos en el sessionStorage (incluyendo el rol y el token)
+                
                 addSession(user);
                 
-                // 4. REDIRECCIÓN SEGÚN EL ROL
+                //REDIRECCIÓN SEGÚN EL ROL
                 alert(`¡Bienvenido/a, ${user.nombre}!`);
 
                 if (user.rol === 'admin') {
-                    // Si es administrador, lo mandás a tu carpeta o vista de administración
+                    // Si es administrador
                     window.location.href = './pages/admin/dashboard.html'; 
                 } else {
-                    // Si es cliente común (o default), va a la tienda tradicional
+                    // Si es cliente común
                     window.location.href = './pages/home/productos.html'; 
                 }
                 

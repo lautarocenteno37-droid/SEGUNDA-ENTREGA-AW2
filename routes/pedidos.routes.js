@@ -13,19 +13,15 @@ router.get('/', async (req, res) => {
         let filtro = {};
 
         if (categoria) {
-            console.log("=== DETECTOR DE FILTRO ===");
-            console.log("1. Categoría recibida del frontend:", categoria);
 
             // Buscamos productos en esa categoría
             const productosEnCategoria = await Producto.find({ 
                 categoria: categoria.toLowerCase().trim() 
             }).select('_id nombre categoria');
 
-            console.log("2. Productos encontrados en esa categoría en la BD:", productosEnCategoria);
 
             // Mapeamos solo los IDs
             const idsProductos = productosEnCategoria.map(p => p._id);
-            console.log("3. IDs de productos a buscar en las órdenes:", idsProductos);
 
             // Filtramos las ventas
             filtro = { "productos.producto": { $in: idsProductos } };
@@ -36,7 +32,6 @@ router.get('/', async (req, res) => {
                         .populate('productos.producto')
                         .sort({ createdAt: -1 }); 
 
-        console.log(`4. Cantidad de órdenes encontradas para responder: ${ventas.length}`);
         res.status(200).json(ventas);
     } catch (error) {
         console.error("Error al obtener los pedidos filtrados:", error);

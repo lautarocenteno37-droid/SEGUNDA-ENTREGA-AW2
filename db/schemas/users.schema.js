@@ -9,7 +9,7 @@ const UserSchema = new Schema({
     contraseña: { type: String, required: true },
     direccion: { type: String, required: true },
     telefono: { type: String, required: true },
-    rol: { type: String, default: "client" } // Valores posibles: "client" o "admin"
+    rol: { type: String, default: "client" } 
 }, { timestamps: true });
 
 const User = models.User || model('User', UserSchema);

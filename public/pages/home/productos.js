@@ -44,14 +44,23 @@ window.loadProducts = async (category = 'all') => {
  */
 window.cambiarCantidad = (id, cambio) => {
     const contador = document.getElementById(`cantidad-${id}`);
-    if (contador) {
-        let cantidadActual = parseInt(contador.innerText);
-        cantidadActual += cambio;
-        if (cantidadActual < 1) cantidadActual = 1; // Evitamos que baje de 1
-        contador.innerText = cantidadActual;
-    }
-};
+    if (!contador) return;
 
+    // Buscamos el producto en la lista global para saber su stock
+    const producto = window.listaProductosGlobal.find(p => (p._id || p.id) === id);
+    const stockDisponible = producto ? producto.stock : 99; // Si no hay producto, limitamos a 99
+
+    let cantidadActual = parseInt(contador.innerText);
+    cantidadActual += cambio;
+
+    // Lógica de límites
+    if (cantidadActual < 1) cantidadActual = 1; 
+    if (cantidadActual > stockDisponible) {
+        cantidadActual = stockDisponible; // Bloqueamos en el tope de stock
+        alert(`Solo tenemos ${stockDisponible} unidades disponibles.`);
+    }
+    contador.innerText = cantidadActual;
+};
 /**
  * 🌟 AÑADIR CON CANTIDAD: Captura las unidades elegidas y las empuja al localStorage
  */
